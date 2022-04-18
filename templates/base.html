@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>
+        {% block title %}
+
+        {% endblock %}
+    </title>
+</head>
+<body>
+    а здесь будет ссылка на все сокращённые ссылки
+    {% block content %}
+
+    {% endblock %}
+</body>
+</html>
