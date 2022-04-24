@@ -1,10 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>all links ever created</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-</body>
-</html>
+{% block title %}
+Все ссылки
+{% endblock %}
+
+{% block content %}
+    <h1>Все ссылки, созданные на ресурсе</h1>
+    <div style="text-align: center;">
+
+  <table>
+    <tbody>
+      <tr>
+          <th>Ссылка</th>
+          <th>Количество нажатий</th>
+      </tr>
+      {% for link in links %}
+          <tr>
+            <td>
+                <a href="{{ link.original_link }}">{{ link.hashed_link }}</a>
+            </td>
+            <td>
+                {{ link.times_clicked }}
+            </td>
+          </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

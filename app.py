@@ -15,6 +15,7 @@ class Link(db.Model):
     hashed_link = db.Column(db.String(), nullable=False)
     is_deleted = db.Column(db.Boolean)
     date_of_creation = db.Column(db.DateTime, default=datetime.utcnow)
+    times_clicked = db.Column(db.BigInteger(), default=0)
 
     def __repr__(self):
         return "<Link %r>" % self.id
@@ -44,6 +45,18 @@ def generate():
             return "Error while shortening link"
     else:
         return render_template('generator.html')
+
+
+@app.route("/get_all_links")
+def get_hash():
+    links = Link.query.order_by(Link.times_clicked.asc()).all()
+    return render_template("allLinks.html", links=links)
+
+
+#@app.route("/<id>")
+#def redirect():
+
+
 
 
 
