@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Ваша ссылка:
+{% endblock %}
+
+{% block content %}
+    {% if short_url %}
+    <span>
+        {{ short_url }}
+    </span>
+{% endblock %}
