@@ -5,8 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from hashids import Hashids
 from datetime import datetime
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///links.db'
@@ -52,7 +50,8 @@ def generate():
             db.session.commit()
             shown_url = "127.0.0.1:5000/" + hashed_link
             return render_template('shortened_link_page.html', short_url=shown_url)
-        except:
+        except Exception as e:
+            print(e.with_traceback())
             return "Error while shortening link"
     else:
         return render_template('generator.html')
@@ -64,8 +63,8 @@ def get_hash():
     return render_template("allLinks.html", links=links)
 
 
-@app.route("/<hashed_link>")
-def redirect(hashed_link):
+@app.route("/redir/<hashed_link>")
+def redirect_to_short(hashed_link):
     link_id = hashids.decode(hashed_link)[0]
     if link_id:
         orig = Link.query.filter(Link.id == link_id).filter(Link.is_deleted == False).first()
