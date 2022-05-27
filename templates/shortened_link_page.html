@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Ваша ссылка:
+    Ссылка
 {% endblock %}
 
 {% block content %}
+    <h1>Ваша ссылка:</h1>
     {% if short_url %}
     <span>
-        {{ short_url }}
+        <a href="{{ link }}">{{ short_url }}</a>
     </span>
     {% endif %}
 {% endblock %}

@@ -13,14 +13,21 @@
       <tr>
           <th>Ссылка</th>
           <th>Количество нажатий</th>
+          <th>Удалить ссылку</th>
       </tr>
       {% for link in links %}
           <tr>
             <td>
-                <a href="{{ link.hashed_link }}">{{ link.hashed_link }}</a>
+                {% set required_string = '/redir/' + link.hashed_link %}
+                {% set full_url = '127.0.0.1:5000/' + link.hashed_link %}
+                <a href="{{ required_string }}">{{ full_url }}</a>
             </td>
             <td>
                 {{ link.times_clicked }}
+            </td>
+          <td>
+                {% set required_string = '/del/' + link.hashed_link %}
+                <a href={{ required_string }}>Удалить</a>
             </td>
           </tr>
       {% endfor %}

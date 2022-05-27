@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from hashids import Hashids
 from datetime import datetime
 
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///links.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -38,18 +37,17 @@ def about():
 
 @app.route("/link_generator", methods=['POST', 'GET'])
 def generate():
-    # all_except_deleted = Link.query.filter(Link.is_deleted == False)
+    all_except_deleted = Link.query.filter(Link.is_deleted == False)
     if request.method == 'POST':
         original_link = request.form['original_link']
         results = [id[0] for id in Link.query.with_entities(Link.id).all()]
-        hashid = hashids.encode(max(results) + 1)
-        hashed_link = hashid
+        hashed_link = hashids.encode(max(results) + 1)
         link = Link(original_link=original_link, hashed_link=hashed_link, is_deleted=False)
         try:
             db.session.add(link)
             db.session.commit()
             shown_url = "127.0.0.1:5000/" + hashed_link
-            return render_template('shortened_link_page.html', short_url=shown_url)
+            return render_template('shortened_link_page.html', short_url=shown_url, link="redir/" + hashed_link)
         except Exception as e:
             print(e.with_traceback())
             return "Error while shortening link"
@@ -59,8 +57,8 @@ def generate():
 
 @app.route("/get_all_links")
 def get_hash():
-    links = Link.query.order_by(Link.times_clicked.asc()).all()
-    return render_template("allLinks.html", links=links)
+    all_except_deleted = Link.query.filter(Link.is_deleted == False)
+    return render_template("allLinks.html", links=all_except_deleted)
 
 
 @app.route("/redir/<hashed_link>")
@@ -75,6 +73,15 @@ def redirect_to_short(hashed_link):
     else:
         flash('Invalid URL')
         return redirect(url_for('index'))
+
+
+@app.route("/del/<hashed_link>")
+def delete_link(hashed_link):
+    link_id = hashids.decode(hashed_link)[0]
+    link = Link.query.filter(Link.id == link_id).filter(Link.is_deleted == False).first()
+    link.is_deleted = True
+    db.session.commit()
+    return redirect('/get_all_links')
 
 
 if __name__ == '__main__':
