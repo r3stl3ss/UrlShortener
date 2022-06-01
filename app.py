@@ -1,3 +1,4 @@
+import requests as requests
 from flask import Flask, render_template, url_for, request, redirect, flash
 from flask_sqlalchemy import SQLAlchemy
 from hashids import Hashids
@@ -30,21 +31,29 @@ def index():
 
 @app.route("/link_generator", methods=['POST', 'GET'])
 def generate():
-    '''Метод, сокращающий ссылку в зависимости от id этой ссылки в базе данных'''
+    """Метод, сокращающий ссылку в зависимости от id этой ссылки в базе данных"""
     if request.method == 'POST':
         original_link = request.form['original_link']
-        results = [id[0] for id in Link.query.with_entities(Link.id).all()] # Получаем массив всех id в базе данных в данный момент...
-        hashed_link = hashids.encode(max(results) + 1) # ... и для новой ссылки берём максимальный и увеличиваем его на один
-        link = Link(original_link=original_link, hashed_link=hashed_link, is_deleted=False)
-        try:
-            db.session.add(link)
-            db.session.commit()
-            shown_url = "127.0.0.1:5000/" + hashed_link # Тут создаём ссылку, которую потом будем отображать, и если бы приложение было не на локалхосте, следовало бы поменять эту строку
-            return render_template('shortened_link_page.html', short_url=shown_url, link="redir/" + hashed_link)
-        except Exception as e:
-            return "Error while shortening link"
+        full_link_http = 'http://' + original_link # это на случай, если на вход пришла сокращённая ссылка типа habr.com
+        full_link_https = 'https://' + original_link # для валидации используется библиотека requests, отправляющая GET запрос на адрес
+        if requests.get(original_link).status_code == 200 \
+        or requests.get(full_link_http).status_code == 200 \
+        or requests.get(full_link_https).status_code == 200: # однако запрос не доходит до сокращённых ссылок, поэтому я их искусственно удлиняю
+            results = [id[0] for id in Link.query.with_entities(Link.id).all()]  # Получаем массив всех id в базе данных в данный момент...
+            hashed_link = hashids.encode(max(results) + 1)  # ... и для новой ссылки берём максимальный и увеличиваем его на один
+            link = Link(original_link=original_link, hashed_link=hashed_link, is_deleted=False)
+            try:
+                db.session.add(link)
+                db.session.commit()
+                shown_url = "127.0.0.1:5000/" + hashed_link  # Тут создаём ссылку, которую потом будем отображать, и если бы приложение было не на локалхосте, следовало бы поменять эту строку
+                return render_template('shortened_link_page.html', short_url=shown_url, link="redir/" + hashed_link)
+            except:
+                return "Error while shortening link"
+        else:
+            flash("Invalid URL", category='invalid_link') # и если ссылка нерабочая, выводится сообщение и происходит редирект обратно на генератор
+            return render_template('generator.html')
     else:
-        return render_template('generator.html') # Это на случай, когда мы просто переходим на страницу, а не вкидываем вдобавок свою ссылку
+        return render_template('generator.html')  # Это на случай, когда мы просто переходим на страницу, а не вкидываем вдобавок свою ссылку
 
 
 @app.route("/get_all_links")
@@ -56,7 +65,7 @@ def get_hash():
 
 @app.route("/redir/<hashed_link>")
 def redirect_to_short(hashed_link):
-    """Метод=перенаправитель, достающий из БД полученный хэш, сверяющий его с ссылкой и перенаправляющий на оригинал ссылки"""
+    """Метод-перенаправитель, достающий из БД полученный хэш, сверяющий его с ссылкой и перенаправляющий на оригинал ссылки """
     link_id = hashids.decode(hashed_link)[0]
     if link_id:
         orig = Link.query.filter(Link.id == link_id).filter(Link.is_deleted == False).first()
@@ -66,7 +75,7 @@ def redirect_to_short(hashed_link):
         return redirect(log)
     else:
         flash('Invalid URL')
-        return redirect(url_for('index'))
+        return render_template('generator.html')
 
 
 @app.route("/del/<hashed_link>")

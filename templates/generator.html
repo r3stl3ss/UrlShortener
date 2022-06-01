@@ -6,6 +6,9 @@
 
 {% block content %}
     <h1>Полная ссылка: </h1>
+    {% for msg in get_flashed_messages() %}
+        <div class="flash">{{msg}}</div>
+    {% endfor %}
     <form method="post">
         <input type="text" name="original_link" id="original_link" placeholder="Link">
         <input type="submit" value="Shorten link">
